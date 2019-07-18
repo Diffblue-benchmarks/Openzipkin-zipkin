@@ -27,6 +27,7 @@ import zipkin2.Endpoint.IpFamily;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -247,18 +248,17 @@ public class EndpointTest {
 
   // Test written by Diffblue Cover.
   @Test
-  public void ipInputNotNullOutputNotNull() {
+  public void ipInputNotNullOutputNotNull() throws UnknownHostException {
     // Arrange
-    final Builder objectUnderTest = new Builder();
-    objectUnderTest.port = 0;
-    objectUnderTest.ipv4Bytes = null;
-    objectUnderTest.ipv6 = null;
-    objectUnderTest.serviceName = null;
-    objectUnderTest.ipv6Bytes = null;
-    objectUnderTest.ipv4 = null;
-    final InetAddress addr = PowerMockito.mock(InetAddress.class);
+    final Builder builder = new Builder();
+    builder.port = 0;
+    builder.ipv4Bytes = null;
+    builder.ipv6 = null;
+    builder.serviceName = null;
+    builder.ipv6Bytes = null;
+    builder.ipv4 = null;
     // Act
-    final Builder retval = objectUnderTest.ip(addr);
+    final Builder retval = builder.ip(InetAddress.getByName("127.0.0.1"));
     // Assert result
     Assert.assertNotNull(retval);
     Assert.assertEquals(0, retval.port);
@@ -273,29 +273,23 @@ public class EndpointTest {
   @Test
   public void parseIpInput0OutputFalse() {
     // Arrange
-    final Builder objectUnderTest = new Builder();
-    objectUnderTest.port = 0;
-    objectUnderTest.ipv4Bytes = null;
-    objectUnderTest.ipv6 = null;
-    objectUnderTest.serviceName = null;
-    objectUnderTest.ipv6Bytes = null;
-    objectUnderTest.ipv4 = null;
-    final byte[] ipBytes = {};
-    // Act
-    final boolean retval = objectUnderTest.parseIp(ipBytes);
+    final Builder builder = new Builder();
+    builder.port = 0;
+    builder.ipv4Bytes = null;
+    builder.ipv6 = null;
+    builder.serviceName = null;
+    builder.ipv6Bytes = null;
+    builder.ipv4 = null;
     // Assert result
-    Assert.assertFalse(retval);
+    Assert.assertFalse(builder.parseIp(new byte[]{}));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void portInputNotNullOutputIllegalArgumentException() {
-    // Arrange
-    final Builder objectUnderTest = new Builder();
-    final Integer port = new Integer(65_536);
     // Act
     thrown.expect(IllegalArgumentException.class);
-    objectUnderTest.port(port);
+    new Builder().port(65_536);
     // Method is not expected to return due to exception thrown
   }
 
@@ -303,12 +297,11 @@ public class EndpointTest {
   @Test
   public void portInputNotNullOutputNotNull() {
     // Arrange
-    final Builder objectUnderTest = new Builder();
-    final Integer port = new Integer(1);
+    final Builder builder = new Builder();
     // Act
-    final Builder retval = objectUnderTest.port(port);
+    final Builder retval = builder.port(1);
     // Assert side effects
-    Assert.assertEquals(1, objectUnderTest.port);
+    Assert.assertEquals(1, builder.port);
     // Assert result
     Assert.assertNotNull(retval);
     Assert.assertEquals(1, retval.port);
@@ -322,11 +315,8 @@ public class EndpointTest {
   // Test written by Diffblue Cover.
   @Test
   public void portInputNotNullOutputNotNull2() {
-    // Arrange
-    final Builder objectUnderTest = new Builder();
-    final Integer port = new Integer(-37_749_736);
     // Act
-    final Builder retval = objectUnderTest.port(port);
+    final Builder retval = new Builder().port(-37_749_736);
     // Assert result
     Assert.assertNotNull(retval);
     Assert.assertEquals(0, retval.port);
@@ -340,11 +330,8 @@ public class EndpointTest {
   // Test written by Diffblue Cover.
   @Test
   public void portInputNullOutputNotNull() {
-    // Arrange
-    final Builder objectUnderTest = new Builder();
-    final Integer port = null;
     // Act
-    final Builder retval = objectUnderTest.port(port);
+    final Builder retval = new Builder().port(null);
     // Assert result
     Assert.assertNotNull(retval);
     Assert.assertEquals(0, retval.port);
@@ -359,105 +346,70 @@ public class EndpointTest {
   @Test
   public void detectFamilyInputNotNullOutputNotNull()
     throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-    // Arrange
-    final String ipString = ",";
     // Act
     final Class<?> classUnderTest = Reflector.forName("zipkin2.Endpoint");
-    final Method methodUnderTest =
-      classUnderTest.getDeclaredMethod("detectFamily", Reflector.forName("java.lang.String"));
+    final Method methodUnderTest = classUnderTest.getDeclaredMethod("detectFamily", Reflector.forName("java.lang.String"));
     methodUnderTest.setAccessible(true);
-    final IpFamily retval = (IpFamily) methodUnderTest.invoke(null, ipString);
     // Assert result
-    Assert.assertEquals(IpFamily.Unknown, retval);
+    Assert.assertEquals(IpFamily.Unknown, (IpFamily) methodUnderTest.invoke(null, ","));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void detectFamilyInputNotNullOutputNotNull2() {
-    // Arrange
-    final String ipString = ":.";
-    // Act
-    final Endpoint.IpFamily retval = Endpoint.detectFamily(ipString);
-    // Assert result
-    Assert.assertEquals(Endpoint.IpFamily.Unknown, retval);
+    Assert.assertEquals(Endpoint.IpFamily.Unknown, Endpoint.detectFamily(":."));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void detectFamilyInputNotNullOutputNotNull3() {
-    // Arrange
-    final String ipString = "1";
-    // Act
-    final Endpoint.IpFamily retval = Endpoint.detectFamily(ipString);
     // Assert result
-    Assert.assertEquals(Endpoint.IpFamily.Unknown, retval);
+    Assert.assertEquals(Endpoint.IpFamily.Unknown, Endpoint.detectFamily("1"));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void detectFamilyInputNotNullOutputNotNull4() {
-    // Arrange
-    final String ipString = ".";
-    // Act
-    final Endpoint.IpFamily retval = Endpoint.detectFamily(ipString);
     // Assert result
-    Assert.assertEquals(Endpoint.IpFamily.Unknown, retval);
+    Assert.assertEquals(Endpoint.IpFamily.Unknown, Endpoint.detectFamily("."));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void textToNumericFormatV6InputNotNullOutputNull()
     throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-    // Arrange
-    final String ipString = "700:0";
     // Act
     final Class<?> classUnderTest = Reflector.forName("zipkin2.Endpoint");
-    final Method methodUnderTest = classUnderTest.getDeclaredMethod(
-      "textToNumericFormatV6", Reflector.forName("java.lang.String"));
+    final Method methodUnderTest = classUnderTest.getDeclaredMethod("textToNumericFormatV6", Reflector.forName("java.lang.String"));
     methodUnderTest.setAccessible(true);
-    final byte[] retval = (byte[]) methodUnderTest.invoke(null, ipString);
     // Assert result
-    Assert.assertNull(retval);
+    Assert.assertNull(methodUnderTest.invoke(null, "700:0"));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void textToNumericFormatV6InputNotNullOutputNull2()
     throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-    // Arrange
-    final String ipString = "7078:0:7";
     // Act
     final Class<?> classUnderTest = Reflector.forName("zipkin2.Endpoint");
-    final Method methodUnderTest = classUnderTest.getDeclaredMethod(
-      "textToNumericFormatV6", Reflector.forName("java.lang.String"));
+    final Method methodUnderTest = classUnderTest.getDeclaredMethod("textToNumericFormatV6", Reflector.forName("java.lang.String"));
     methodUnderTest.setAccessible(true);
-    final byte[] retval = (byte[]) methodUnderTest.invoke(null, ipString);
     // Assert result
-    Assert.assertNull(retval);
+    Assert.assertNull(methodUnderTest.invoke(null, "7078:0:7"));
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void parseHextetInputNotNullOutputNumberFormatException() {
-    // Arrange
-    final String ipPart = "A1B2C3";
-    // Act
     thrown.expect(NumberFormatException.class);
-    Endpoint.parseHextet(ipPart);
+    Endpoint.parseHextet("A1B2C3");
     // Method is not expected to return due to exception thrown
   }
 
   // Test written by Diffblue Cover.
   @Test
   public void isValidIpV4WordInputNotNullZeroPositiveOutputFalse() {
-    // Arrange
-    final CharSequence word = "$\u0ffe";
-    final int from = 0;
-    final int toExclusive = 2;
-    // Act
-    final boolean retval = Endpoint.isValidIpV4Word(word, from, toExclusive);
-    // Assert result
-    Assert.assertFalse(retval);
+    Assert.assertFalse(Endpoint.isValidIpV4Word("$\u0ffe", 0, 2));
   }
 
   // Test written by Diffblue Cover.
